@@ -1,0 +1,31 @@
+name: mais_tracker
+description: Application de gestion des récoltes de maïs.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  provider: ^6.1.1
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
+  path: ^1.8.3
+  intl: ^0.18.1
+  file_picker: ^6.1.1
+  fl_chart: ^0.66.0
+  path_provider: ^2.1.2
+  pdf: ^3.10.0
+  printing: ^5.11.0
+  share_plus: ^7.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true 
