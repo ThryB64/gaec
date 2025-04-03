@@ -31,24 +31,42 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
   @override
   void initState() {
     super.initState();
-    _poidsPleinController = TextEditingController(text: widget.chargement?.poidsPlein.toString() ?? '');
-    _poidsVideController = TextEditingController(text: widget.chargement?.poidsVide.toString() ?? '');
-    _humiditeController = TextEditingController(text: widget.chargement?.humidite.toString() ?? '');
-    _selectedRemorque = widget.chargement?.remorque;
-    _selectedParcelleId = widget.chargement?.parcelleId;
-    _selectedCelluleId = widget.chargement?.celluleId;
-    _selectedVariete = widget.chargement?.variete;
+    // Initialiser les contrôleurs avec des valeurs vides pour un nouveau chargement
+    _poidsPleinController = TextEditingController();
+    _poidsVideController = TextEditingController();
+    _humiditeController = TextEditingController();
 
-    // Si c'est un nouveau chargement, sélectionner automatiquement la dernière parcelle et le dernier silo utilisés
-    if (widget.chargement == null) {
+    // Si on modifie un chargement existant, utiliser ses valeurs
+    if (widget.chargement != null) {
+      _poidsPleinController.text = widget.chargement!.poidsPlein.toString();
+      _poidsVideController.text = widget.chargement!.poidsVide.toString();
+      _humiditeController.text = widget.chargement!.humidite.toString();
+      _selectedRemorque = widget.chargement!.remorque;
+      _selectedParcelleId = widget.chargement!.parcelleId;
+      _selectedCelluleId = widget.chargement!.celluleId;
+      _selectedVariete = widget.chargement!.variete;
+      _selectedYear = widget.chargement!.dateChargement.year;
+    } else {
+      // Pour un nouveau chargement, on récupère les données du dernier chargement
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final provider = context.read<DatabaseProvider>();
         if (provider.chargements.isNotEmpty) {
-          final dernierChargement = provider.chargements.first;
+          // Trier les chargements par date décroissante pour avoir le plus récent
+          final chargements = provider.chargements.toList()
+            ..sort((a, b) => b.dateChargement.compareTo(a.dateChargement));
+          
+          final dernierChargement = chargements.first;
           setState(() {
             _selectedParcelleId = dernierChargement.parcelleId;
             _selectedCelluleId = dernierChargement.celluleId;
             _selectedYear = dernierChargement.dateChargement.year;
+            _selectedVariete = dernierChargement.variete;
+            _selectedRemorque = dernierChargement.remorque;
+          });
+        } else {
+          // S'il n'y a pas de chargement, utiliser l'année en cours
+          setState(() {
+            _selectedYear = DateTime.now().year;
           });
         }
       });
@@ -66,15 +84,57 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
   List<String> _getVarietesDisponibles(DatabaseProvider provider) {
     if (_selectedParcelleId == null || _selectedYear == null) return [];
 
+    final anneeSelectionnee = _selectedYear!;  // Non-null assertion car vérifié au-dessus
+
+    // Chercher d'abord dans les semis de l'année
     final semisAnnee = provider.semis.where((s) => 
       s.parcelleId == _selectedParcelleId && 
-      s.date.year == _selectedYear
+      s.date.year == anneeSelectionnee
     ).toList();
 
     final varietes = <String>{};
-    for (var semis in semisAnnee) {
-      varietes.addAll(semis.varietes);
+    
+    // Si on a des semis, utiliser leurs variétés
+    if (semisAnnee.isNotEmpty) {
+      for (var semis in semisAnnee) {
+        varietes.addAll(semis.varietes);
+      }
+    } else {
+      // Si pas de semis pour l'année courante, chercher dans les chargements existants
+      final chargementsParcelleAnnee = provider.chargements.where((c) =>
+        c.parcelleId == _selectedParcelleId &&
+        c.dateChargement.year == anneeSelectionnee
+      ).toList();
+
+      for (var chargement in chargementsParcelleAnnee) {
+        if (chargement.variete.isNotEmpty) {
+          varietes.add(chargement.variete);
+        }
+      }
+
+      // Si toujours pas de variétés, prendre celles de l'année précédente
+      if (varietes.isEmpty) {
+        final semisAnneePrecedente = provider.semis.where((s) => 
+          s.parcelleId == _selectedParcelleId && 
+          s.date.year == anneeSelectionnee - 1
+        ).toList();
+
+        for (var semis in semisAnneePrecedente) {
+          varietes.addAll(semis.varietes);
+        }
+      }
+
+      // Si toujours rien, ajouter les variétés connues des chargements précédents
+      if (varietes.isEmpty) {
+        final toutesVarietes = provider.chargements
+          .where((c) => c.parcelleId == _selectedParcelleId)
+          .map((c) => c.variete)
+          .where((v) => v.isNotEmpty)
+          .toSet();
+        varietes.addAll(toutesVarietes);
+      }
     }
+
     return varietes.toList()..sort();
   }
 
@@ -87,18 +147,28 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
       ),
       body: Consumer<DatabaseProvider>(
         builder: (context, provider, child) {
-          final annees = provider.chargements
+          // Créer la liste des années à partir des chargements existants
+          Set<int> anneesSet = provider.chargements
               .map((c) => c.dateChargement.year)
-              .toSet()
-              .toList()
-            ..sort((a, b) => b.compareTo(a));
+              .toSet();
+          
+          // Ajouter l'année en cours
+          final anneeEnCours = DateTime.now().year;
+          anneesSet.add(anneeEnCours);
+          
+          // Convertir en liste triée
+          final annees = anneesSet.toList()..sort((a, b) => b.compareTo(a));
 
-          if (annees.isEmpty) {
-            annees.add(DateTime.now().year);
+          // Vérifier si l'année sélectionnée est toujours valide
+          if (_selectedYear != null && !annees.contains(_selectedYear)) {
+            _selectedYear = anneeEnCours;
           }
 
+          // Si aucune année n'est sélectionnée, utiliser l'année en cours
+          _selectedYear ??= anneeEnCours;
+
           final cellulesAnnee = provider.cellules
-              .where((c) => c.dateCreation.year == (_selectedYear ?? DateTime.now().year))
+              .where((c) => c.dateCreation.year == _selectedYear)
               .toList();
 
           final varietesDisponibles = _getVarietesDisponibles(provider);
@@ -163,31 +233,30 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  if (varietesDisponibles.isNotEmpty)
-                    DropdownButtonFormField<String>(
-                      value: _selectedVariete,
-                      decoration: const InputDecoration(
-                        labelText: 'Variété',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: varietesDisponibles.map((variete) {
-                        return DropdownMenuItem(
-                          value: variete,
-                          child: Text(variete),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedVariete = value;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Veuillez sélectionner une variété';
-                        }
-                        return null;
-                      },
+                  DropdownButtonFormField<String>(
+                    value: _selectedVariete,
+                    decoration: const InputDecoration(
+                      labelText: 'Variété',
+                      border: OutlineInputBorder(),
                     ),
+                    items: varietesDisponibles.map((variete) {
+                      return DropdownMenuItem(
+                        value: variete,
+                        child: Text(variete),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedVariete = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez sélectionner une variété';
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: _selectedCelluleId,
@@ -245,7 +314,7 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
                       labelText: 'Poids plein (kg)',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer le poids plein';
@@ -265,7 +334,7 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
                       labelText: 'Poids vide (kg)',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer le poids vide';
@@ -285,7 +354,7 @@ class _ChargementFormScreenState extends State<ChargementFormScreen> {
                       labelText: 'Humidité (%)',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer l\'humidité';

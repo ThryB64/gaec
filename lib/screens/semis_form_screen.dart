@@ -205,6 +205,29 @@ class _SemisFormScreenState extends State<SemisFormScreen> {
       ),
       body: Consumer<DatabaseProvider>(
         builder: (context, provider, child) {
+          // Obtenir l'année en cours
+          final anneeEnCours = DateTime.now().year;
+
+          // Obtenir les parcelles qui ont déjà un semis cette année
+          final parcellesAvecSemis = provider.semis
+              .where((s) => s.date.year == anneeEnCours)
+              .map((s) => s.parcelleId)
+              .toSet();
+
+          // Filtrer les parcelles pour ne garder que celles sans semis
+          final parcellesDisponibles = provider.parcelles
+              .where((p) => !parcellesAvecSemis.contains(p.id))
+              .toList();
+
+          // Si on modifie un semis existant, ajouter sa parcelle à la liste
+          if (widget.semis != null) {
+            final parcelleDuSemis = provider.parcelles
+                .firstWhere((p) => p.id == widget.semis!.parcelleId);
+            if (!parcellesDisponibles.contains(parcelleDuSemis)) {
+              parcellesDisponibles.add(parcelleDuSemis);
+            }
+          }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -218,7 +241,7 @@ class _SemisFormScreenState extends State<SemisFormScreen> {
                       labelText: 'Parcelle',
                       border: OutlineInputBorder(),
                     ),
-                    items: provider.parcelles.map((parcelle) {
+                    items: parcellesDisponibles.map((parcelle) {
                       return DropdownMenuItem<int>(
                         value: parcelle.id,
                         child: Text(parcelle.nom),
