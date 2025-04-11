@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "523429690515",
+    "firebase_url": "https://mais-tracker-app-85823-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "mais-tracker-app-85823",
+    "storage_bucket": "mais-tracker-app-85823.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:523429690515:android:d783a7d436f2cdef2ea166",
+        "android_client_info": {
+          "package_name": "com.example.mais_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGEbjxiMj_373k5DHdaqJkq4TKw7jv8lg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
