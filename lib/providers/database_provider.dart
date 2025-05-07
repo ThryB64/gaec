@@ -1,22 +1,33 @@
 import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 import '../models/parcelle.dart';
 import '../models/cellule.dart';
 import '../models/chargement.dart';
 import '../models/semis.dart';
 import '../models/variete.dart';
-import '../services/database_service.dart';
+import '../services/sync_service.dart';
+import '../services/firestore_service.dart';
 import '../utils/poids_utils.dart';
 
 class DatabaseProvider with ChangeNotifier {
-  final DatabaseService _db;
+  Database? _database;
+  final SyncService _syncService;
+  final FirestoreServiceParcelle _parcelleService = FirestoreServiceParcelle();
+  final FirestoreServiceCellule _celluleService = FirestoreServiceCellule();
+  final FirestoreServiceChargement _chargementService = FirestoreServiceChargement();
+  final FirestoreServiceSemis _semisService = FirestoreServiceSemis();
+  final FirestoreServiceVariete _varieteService = FirestoreServiceVariete();
   List<Parcelle> _parcelles = [];
   List<Cellule> _cellules = [];
   List<Chargement> _chargements = [];
   List<Semis> _semis = [];
   List<Variete> _varietes = [];
+  bool _isInitialized = false;
 
-  DatabaseProvider() : _db = DatabaseService() {
-    _loadData();
+  DatabaseProvider()
+      : _syncService = SyncService(_database!),
+        _initialize() {
   }
 
   List<Parcelle> get parcelles => _parcelles;
@@ -25,12 +36,52 @@ class DatabaseProvider with ChangeNotifier {
   List<Semis> get semis => _semis;
   List<Variete> get varietes => _varietes;
 
-  Future<void> initialize() async {
+  Future<void> _initialize() async {
     try {
       await _loadData();
+      _setupFirestoreListeners();
+      _isInitialized = true;
     } catch (e) {
       print('Erreur lors de l\'initialisation: $e');
       rethrow;
+    }
+  }
+
+  void _setupFirestoreListeners() {
+    // Écouter les changements des parcelles
+    _parcelleService.getParcellesStream().listen((parcelles) {
+      _parcelles = parcelles;
+      notifyListeners();
+    });
+
+    // Écouter les changements des cellules
+    _celluleService.getCellulesStream().listen((cellules) {
+      _cellules = cellules;
+      notifyListeners();
+    });
+
+    // Écouter les changements des chargements
+    _chargementService.getChargementsStream().listen((chargements) {
+      _chargements = chargements;
+      notifyListeners();
+    });
+
+    // Écouter les changements des semis
+    _semisService.getSemisStream().listen((semis) {
+      _semis = semis;
+      notifyListeners();
+    });
+
+    // Écouter les changements des variétés
+    _varieteService.getVarietesStream().listen((varietes) {
+      _varietes = varietes;
+      notifyListeners();
+    });
+  }
+
+  Future<void> initialize() async {
+    if (!_isInitialized) {
+      await _initialize();
     }
   }
 
@@ -78,17 +129,20 @@ class DatabaseProvider with ChangeNotifier {
 
   Future<void> _loadData() async {
     try {
-      final parcelles = await _db.getParcelles();
-      final cellules = await _db.getCellules();
-      final chargements = await _db.getChargements();
-      final semis = await _db.getSemis();
-      final varietes = await _db.getVarietes();
+      final parcelles = await getParcelles();
+      final cellules = await getCellules();
+      final chargements = await getChargements();
+      final semis = await getSemis();
+      final varietes = await getVarietes();
 
       _parcelles = parcelles;
       _cellules = cellules;
       _chargements = chargements;
       _semis = semis;
       _varietes = varietes;
+
+      // Synchroniser les données avec Firestore
+      await syncAll();
 
       notifyListeners();
     } catch (e) {
@@ -98,15 +152,24 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> ajouterParcelle(Parcelle parcelle) async {
-    final id = await _db.insertParcelle(parcelle);
-    parcelle.id = id;
-    _parcelles.add(parcelle);
+    final id = await _database!.insert('parcelles', parcelle.toMap());
+    final newParcelle = parcelle.copyWith(id: id);
+    if (parcelle.documentId == null) {
+      final docId = await _parcelleService.create(newParcelle);
+      await _database!.update(
+        'parcelles',
+        {'document_id': docId},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+    _parcelles.add(newParcelle);
     notifyListeners();
   }
 
   Future<void> modifierParcelle(Parcelle parcelle) async {
     if (parcelle.id != null) {
-      await _db.updateParcelle(parcelle);
+      await updateParcelle(parcelle);
       final index = _parcelles.indexWhere((p) => p.id == parcelle.id);
       if (index != -1) {
         _parcelles[index] = parcelle;
@@ -116,21 +179,44 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> supprimerParcelle(int id) async {
-    await _db.deleteParcelle(id);
+    final parcelle = (await _database!.query(
+      'parcelles',
+      where: 'id = ?',
+      whereArgs: [id],
+    )).first;
+    
+    if (parcelle['document_id'] != null) {
+      await _parcelleService.delete(parcelle['document_id']);
+    }
+    
+    await _database!.delete(
+      'parcelles',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     _parcelles.removeWhere((p) => p.id == id);
     notifyListeners();
   }
 
   Future<void> ajouterCellule(Cellule cellule) async {
-    final id = await _db.insertCellule(cellule);
-    cellule.id = id;
-    _cellules.add(cellule);
+    final id = await _database!.insert('cellules', cellule.toMap());
+    final newCellule = cellule.copyWith(id: id);
+    if (cellule.documentId == null) {
+      final docId = await _celluleService.create(newCellule);
+      await _database!.update(
+        'cellules',
+        {'document_id': docId},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+    _cellules.add(newCellule);
     notifyListeners();
   }
 
   Future<void> modifierCellule(Cellule cellule) async {
     if (cellule.id != null) {
-      await _db.updateCellule(cellule);
+      await updateCellule(cellule);
       final index = _cellules.indexWhere((c) => c.id == cellule.id);
       if (index != -1) {
         _cellules[index] = cellule;
@@ -140,7 +226,21 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> supprimerCellule(int id) async {
-    await _db.deleteCellule(id);
+    final cellule = (await _database!.query(
+      'cellules',
+      where: 'id = ?',
+      whereArgs: [id],
+    )).first;
+    
+    if (cellule['document_id'] != null) {
+      await _celluleService.delete(cellule['document_id']);
+    }
+    
+    await _database!.delete(
+      'cellules',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     _cellules.removeWhere((c) => c.id == id);
     notifyListeners();
   }
@@ -170,9 +270,18 @@ class DatabaseProvider with ChangeNotifier {
         chargement.humidite,
       );
 
-      final id = await _db.insertChargement(chargement);
-      chargement.id = id;
-      _chargements.add(chargement);
+      final id = await _database!.insert('chargements', chargement.toMap());
+      final newChargement = chargement.copyWith(id: id);
+      if (chargement.documentId == null) {
+        final docId = await _chargementService.create(newChargement);
+        await _database!.update(
+          'chargements',
+          {'document_id': docId},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+      _chargements.add(newChargement);
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -205,7 +314,7 @@ class DatabaseProvider with ChangeNotifier {
           chargement.humidite,
         );
 
-        await _db.updateChargement(chargement);
+        await updateChargement(chargement);
         final index = _chargements.indexWhere((c) => c.id == chargement.id);
         if (index != -1) {
           _chargements[index] = chargement;
@@ -218,25 +327,44 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> supprimerChargement(int id) async {
-    try {
-      await _db.deleteChargement(id);
-      _chargements.removeWhere((c) => c.id == id);
-      notifyListeners();
-    } catch (e) {
-      rethrow;
+    final chargement = (await _database!.query(
+      'chargements',
+      where: 'id = ?',
+      whereArgs: [id],
+    )).first;
+    
+    if (chargement['document_id'] != null) {
+      await _chargementService.delete(chargement['document_id']);
     }
+    
+    await _database!.delete(
+      'chargements',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    _chargements.removeWhere((c) => c.id == id);
+    notifyListeners();
   }
 
   Future<void> ajouterSemis(Semis semis) async {
-    final id = await _db.insertSemis(semis);
-    semis.id = id;
-    _semis.add(semis);
+    final id = await _database!.insert('semis', semis.toMap());
+    final newSemis = semis.copyWith(id: id);
+    if (semis.documentId == null) {
+      final docId = await _semisService.create(newSemis);
+      await _database!.update(
+        'semis',
+        {'document_id': docId},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+    _semis.add(newSemis);
     notifyListeners();
   }
 
   Future<void> modifierSemis(Semis semis) async {
     if (semis.id != null) {
-      await _db.updateSemis(semis);
+      await updateSemis(semis);
       final index = _semis.indexWhere((s) => s.id == semis.id);
       if (index != -1) {
         _semis[index] = semis;
@@ -246,13 +374,74 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> supprimerSemis(int id) async {
-    await _db.deleteSemis(id);
+    final semis = (await _database!.query(
+      'semis',
+      where: 'id = ?',
+      whereArgs: [id],
+    )).first;
+    
+    if (semis['document_id'] != null) {
+      await _semisService.delete(semis['document_id']);
+    }
+    
+    await _database!.delete(
+      'semis',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     _semis.removeWhere((s) => s.id == id);
     notifyListeners();
   }
 
+  Future<void> ajouterVariete(Variete variete) async {
+    final id = await _database!.insert('varietes', variete.toMap());
+    final newVariete = variete.copyWith(id: id);
+    if (variete.documentId == null) {
+      final docId = await _varieteService.create(newVariete);
+      await _database!.update(
+        'varietes',
+        {'document_id': docId},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+    _varietes.add(newVariete);
+    notifyListeners();
+  }
+
+  Future<void> modifierVariete(Variete variete) async {
+    if (variete.id != null) {
+      await updateVariete(variete);
+      final index = _varietes.indexWhere((v) => v.id == variete.id);
+      if (index != -1) {
+        _varietes[index] = variete;
+      }
+      notifyListeners();
+    }
+  }
+
+  Future<void> supprimerVariete(int id) async {
+    final variete = (await _database!.query(
+      'varietes',
+      where: 'id = ?',
+      whereArgs: [id],
+    )).first;
+    
+    if (variete['document_id'] != null) {
+      await _varieteService.delete(variete['document_id']);
+    }
+    
+    await _database!.delete(
+      'varietes',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    _varietes.removeWhere((v) => v.id == id);
+    notifyListeners();
+  }
+
   Future<void> deleteAllData() async {
-    final db = await _db.database;
+    final db = await _database;
     await db.transaction((txn) async {
       await txn.rawDelete('DELETE FROM chargements');
       await txn.rawDelete('DELETE FROM semis');
@@ -264,7 +453,7 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> importData(Map<String, dynamic> data) async {
-    final db = await _db.database;
+    final db = await _database;
     await db.transaction((txn) async {
       // Supprimer les données existantes
       await txn.rawDelete('DELETE FROM chargements');
@@ -354,34 +543,10 @@ class DatabaseProvider with ChangeNotifier {
     await _loadData();
   }
 
-  Future<void> ajouterVariete(Variete variete) async {
-    final id = await _db.insertVariete(variete);
-    variete.id = id;
-    _varietes.add(variete);
-    notifyListeners();
-  }
-
-  Future<void> modifierVariete(Variete variete) async {
-    if (variete.id != null) {
-      await _db.updateVariete(variete);
-      final index = _varietes.indexWhere((v) => v.id == variete.id);
-      if (index != -1) {
-        _varietes[index] = variete;
-      }
-      notifyListeners();
-    }
-  }
-
-  Future<void> supprimerVariete(int id) async {
-    await _db.deleteVariete(id);
-    _varietes.removeWhere((v) => v.id == id);
-    notifyListeners();
-  }
-
   Future<void> updateAllChargementsPoidsNormes() async {
     try {
       print('Début de la mise à jour des poids aux normes');
-      await _db.updateAllChargementsPoidsNormes();
+      await _database!.update('chargements', {'poids_normes': 0}, where: 'poids_normes != 0');
       print('Mise à jour des poids aux normes terminée');
       // Recharger les données après la mise à jour
       await _loadData();
@@ -411,5 +576,100 @@ class DatabaseProvider with ChangeNotifier {
         dateCreation: DateTime.now(),
       ),
     );
+  }
+
+  Future<void> syncAll() async {
+    await _syncService.syncAll();
+    notifyListeners();
+  }
+
+  Future<List<Parcelle>> getParcelles() async {
+    final List<Map<String, dynamic>> maps = await _database!.query('parcelles');
+    return List.generate(maps.length, (i) => Parcelle.fromMap(maps[i]));
+  }
+
+  Future<List<Cellule>> getCellules() async {
+    final List<Map<String, dynamic>> maps = await _database!.query('cellules');
+    return List.generate(maps.length, (i) => Cellule.fromMap(maps[i]));
+  }
+
+  Future<List<Chargement>> getChargements() async {
+    final List<Map<String, dynamic>> maps = await _database!.query('chargements');
+    return List.generate(maps.length, (i) => Chargement.fromMap(maps[i]));
+  }
+
+  Future<List<Semis>> getSemis() async {
+    final List<Map<String, dynamic>> maps = await _database!.query('semis');
+    return List.generate(maps.length, (i) => Semis.fromMap(maps[i]));
+  }
+
+  Future<List<Variete>> getVarietes() async {
+    final List<Map<String, dynamic>> maps = await _database!.query('varietes');
+    return List.generate(maps.length, (i) => Variete.fromMap(maps[i]));
+  }
+
+  Future<void> updateParcelle(Parcelle parcelle) async {
+    await _database!.update(
+      'parcelles',
+      parcelle.toMap(),
+      where: 'id = ?',
+      whereArgs: [parcelle.id],
+    );
+    if (parcelle.documentId != null) {
+      await _parcelleService.update(parcelle.documentId!, parcelle);
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateCellule(Cellule cellule) async {
+    await _database!.update(
+      'cellules',
+      cellule.toMap(),
+      where: 'id = ?',
+      whereArgs: [cellule.id],
+    );
+    if (cellule.documentId != null) {
+      await _celluleService.update(cellule.documentId!, cellule);
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateChargement(Chargement chargement) async {
+    await _database!.update(
+      'chargements',
+      chargement.toMap(),
+      where: 'id = ?',
+      whereArgs: [chargement.id],
+    );
+    if (chargement.documentId != null) {
+      await _chargementService.update(chargement.documentId!, chargement);
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateSemis(Semis semis) async {
+    await _database!.update(
+      'semis',
+      semis.toMap(),
+      where: 'id = ?',
+      whereArgs: [semis.id],
+    );
+    if (semis.documentId != null) {
+      await _semisService.update(semis.documentId!, semis);
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateVariete(Variete variete) async {
+    await _database!.update(
+      'varietes',
+      variete.toMap(),
+      where: 'id = ?',
+      whereArgs: [variete.id],
+    );
+    if (variete.documentId != null) {
+      await _varieteService.update(variete.documentId!, variete);
+    }
+    notifyListeners();
   }
 } 

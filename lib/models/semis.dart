@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'variete_surface.dart';
 
 class Semis {
@@ -7,6 +8,7 @@ class Semis {
   final DateTime date;
   final List<VarieteSurface> varietesSurfaces;
   final String? notes;
+  final String? documentId; // ID du document Firestore
 
   Semis({
     this.id,
@@ -14,6 +16,7 @@ class Semis {
     required this.date,
     required this.varietesSurfaces,
     this.notes,
+    this.documentId,
   });
 
   // Getter pour la compatibilité avec le code existant
@@ -29,6 +32,15 @@ class Semis {
     };
   }
 
+  Map<String, dynamic> toFirestore() {
+    return {
+      'parcelle_id': parcelleId,
+      'date': Timestamp.fromDate(date),
+      'varietes_surfaces': varietesSurfaces.map((v) => v.toMap()).toList(),
+      'notes': notes,
+    };
+  }
+
   factory Semis.fromMap(Map<String, dynamic> map) {
     final List<dynamic> varietesData = jsonDecode(map['varietes_surfaces']);
     return Semis(
@@ -37,6 +49,37 @@ class Semis {
       date: DateTime.parse(map['date']),
       varietesSurfaces: varietesData.map((v) => VarieteSurface.fromMap(v)).toList(),
       notes: map['notes'],
+    );
+  }
+
+  factory Semis.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Semis(
+      documentId: doc.id,
+      parcelleId: data['parcelle_id'] ?? 0,
+      date: (data['date'] as Timestamp).toDate(),
+      varietesSurfaces: (data['varietes_surfaces'] as List<dynamic>)
+          .map((v) => VarieteSurface.fromMap(v))
+          .toList(),
+      notes: data['notes'],
+    );
+  }
+
+  Semis copyWith({
+    int? id,
+    int? parcelleId,
+    DateTime? date,
+    List<VarieteSurface>? varietesSurfaces,
+    String? notes,
+    String? documentId,
+  }) {
+    return Semis(
+      id: id ?? this.id,
+      parcelleId: parcelleId ?? this.parcelleId,
+      date: date ?? this.date,
+      varietesSurfaces: varietesSurfaces ?? this.varietesSurfaces,
+      notes: notes ?? this.notes,
+      documentId: documentId ?? this.documentId,
     );
   }
 

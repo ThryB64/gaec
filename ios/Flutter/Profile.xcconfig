@@ -1,12 +1,12 @@
-#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"
 #include "Generated.xcconfig"
 
-// Configuration spécifique à la release
+// Configuration spécifique au profile
 ENABLE_BITCODE = NO
 SWIFT_VERSION = 5.0
 IPHONEOS_DEPLOYMENT_TARGET = 12.0
 TARGETED_DEVICE_FAMILY = 1,2
 DEVELOPMENT_TEAM = YOUR_TEAM_ID
-CODE_SIGN_IDENTITY = Apple Distribution
+CODE_SIGN_IDENTITY = Apple Development
 PROVISIONING_PROFILE_SPECIFIER = 
-CODE_SIGN_STYLE = Automatic
+CODE_SIGN_STYLE = Automatic 

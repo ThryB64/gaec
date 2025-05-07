@@ -1,0 +1,159 @@
+# Documentation Maïs Tracker
+Version: 1.0.2
+Date: 2024-03-21
+
+## 1. Structure du Projet
+
+### 1.1 Arborescence
+```
+mais_tracker/
+├── lib/
+│   ├── main.dart                 # Point d'entrée de l'application
+│   ├── models/                   # Modèles de données
+│   ├── screens/                  # Écrans de l'application
+│   ├── providers/                # Gestionnaires d'état
+│   ├── services/                 # Services (DB, Firebase, etc.)
+│   └── utils/                    # Utilitaires et helpers
+├── test/                         # Tests unitaires
+├── assets/                       # Ressources statiques
+├── ios/                         # Configuration iOS
+├── android/                     # Configuration Android
+└── linux/                       # Configuration Linux
+```
+
+### 1.2 Description des Composants
+
+#### 1.2.1 Écrans (screens/)
+- home_screen.dart : Tableau de bord principal avec statistiques
+- parcelles_screen.dart : Gestion des parcelles
+- cellules_screen.dart : Gestion des cellules
+- chargements_screen.dart : Gestion des chargements
+- semis_screen.dart : Gestion des semis par parcelle
+- varietes_screen.dart : Gestion des variétés de maïs
+- statistiques_screen.dart : Visualisation des données
+- import_export_screen.dart : Import/Export de données
+- export_screen.dart : Génération de PDF/CSV
+
+#### 1.2.2 Providers
+- database_provider.dart : Gestion de la base de données SQLite locale et synchronisation avec Firestore
+
+#### 1.2.3 Services
+- database_service.dart : Service de gestion de la base de données SQLite locale
+- firestore_service.dart : Service de synchronisation avec Firebase Firestore
+- sync_service.dart : Service de synchronisation bidirectionnelle
+
+## 2. État Actuel
+
+### 2.1 Fonctionnalités Implémentées
+- ✅ Base de données SQLite locale avec sqflite_common_ffi
+- ✅ Interface utilisateur complète
+- ✅ Gestion des parcelles, cellules, chargements
+- ✅ Export/Import de données
+- ✅ Statistiques et visualisations
+- ✅ Synchronisation bidirectionnelle avec Firestore
+- ✅ Tests unitaires pour les services critiques
+- ✅ Configuration iOS complète
+- ✅ Configuration Codemagic.io
+
+### 2.2 Migration Firebase (Terminée)
+
+#### 2.2.1 Tâches Complétées
+- ✅ Initialisation de Firebase dans main.dart
+- ✅ Configuration de base du projet
+- ✅ Création du service Firestore
+- ✅ Adaptation des modèles pour Firestore
+- ✅ Mise en place de la synchronisation temps réel
+- ✅ Implémentation de la synchronisation bidirectionnelle
+- ✅ Tests de performance
+- ✅ Configuration iOS pour Codemagic
+- ✅ Configuration des variables d'environnement
+- ✅ Tests unitaires des services
+
+## 3. Configuration iOS
+
+### 3.1 Fichiers de Configuration
+- ✅ GoogleService-Info.plist avec variables d'environnement
+- ✅ Podfile avec dépendances Firebase
+- ✅ Info.plist avec permissions
+- ✅ Configuration des certificats dans Codemagic.io
+
+### 3.2 Variables d'Environnement
+- FIREBASE_API_KEY
+- FIREBASE_APP_ID
+- FIREBASE_MESSAGING_SENDER_ID
+- FIREBASE_PROJECT_ID
+- FIREBASE_STORAGE_BUCKET
+- APP_STORE_CONNECT_API_KEY
+- APP_STORE_CONNECT_API_KEY_ID
+- APP_STORE_CONNECT_API_ISSUER_ID
+- NOTIFICATION_EMAIL
+
+## 4. Tests
+
+### 4.1 Tests Unitaires
+- ✅ Tests du service de synchronisation
+- ✅ Tests des modèles
+- ✅ Tests de conversion Firestore
+
+### 4.2 Tests d'Intégration
+- ✅ Tests de synchronisation bidirectionnelle
+- ✅ Tests de gestion des erreurs
+- ✅ Tests de persistance des données
+
+## 5. Déploiement
+
+### 5.1 Prérequis
+1. Configurer les variables d'environnement dans Codemagic.io
+2. Vérifier les certificats de distribution iOS
+3. Configurer le compte App Store Connect
+4. Vérifier les permissions Firebase
+
+### 5.2 Étapes de Déploiement
+1. Pousser les modifications sur la branche principale
+2. Déclencher le workflow Codemagic
+3. Vérifier les logs de build
+4. Tester la version TestFlight
+5. Soumettre à l'App Store
+
+## 6. Maintenance
+
+### 6.1 Tâches Régulières
+- Mettre à jour les dépendances
+- Vérifier les logs Firebase
+- Surveiller les performances
+- Sauvegarder les données
+
+### 6.2 Résolution des Problèmes
+- Vérifier les logs d'erreur
+- Tester la synchronisation
+- Valider les données
+- Vérifier la connectivité
+
+## 7. Historique des Modifications
+
+### 2024-03-21 (v1.0.0)
+- Création de la documentation initiale
+- Analyse de la structure du projet
+- Planification de la migration Firebase
+
+### 2024-03-21 (v1.0.1)
+- Implémentation du service Firestore
+- Mise à jour du DatabaseProvider
+- Ajout de la synchronisation bidirectionnelle
+
+### 2024-03-21 (v1.0.2)
+- Finalisation de la synchronisation Firebase
+- Ajout des tests unitaires
+- Configuration complète iOS
+- Configuration Codemagic.io
+- Documentation mise à jour
+
+## 8. État Final
+
+✅ Projet prêt à être compilé pour iOS avec Codemagic
+
+### Prochaines étapes recommandées :
+1. Lancer le build sur Codemagic.io
+2. Tester la version TestFlight
+3. Collecter les retours utilisateurs
+4. Planifier les améliorations futures 

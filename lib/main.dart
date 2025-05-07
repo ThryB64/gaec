@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/foundation.dart';
+
 import 'providers/database_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/semis_screen.dart';
 import 'screens/import_export_screen.dart';
-import 'package:flutter/foundation.dart';
+import 'config/firebase_config.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Capturer les erreurs non gérées
@@ -16,6 +19,17 @@ void main() {
     debugPrint('Stack trace: $stack');
     return true;
   };
+
+  try {
+    // Initialiser Firebase avec la configuration
+    await Firebase.initializeApp(
+      options: FirebaseConfig.options,
+    );
+    debugPrint('Firebase initialisé avec succès');
+  } catch (e) {
+    debugPrint('Erreur lors de l\'initialisation de Firebase: $e');
+    // Continuer l'exécution même si Firebase échoue
+  }
 
   // Initialiser sqflite_common_ffi
   sqfliteFfiInit();
@@ -64,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final provider = Provider.of<DatabaseProvider>(context, listen: false);
       await provider.initialize();
-      
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -105,9 +119,9 @@ class _SplashScreenState extends State<SplashScreen> {
                       size: 64,
                     ),
                     const SizedBox(height: 16),
-                    Text(
+                    const Text(
                       'Erreur lors de l\'initialisation',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -162,4 +176,4 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-} 
+}
