@@ -21,6 +21,12 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
     scripts:
+      - name: Clean and regenerate iOS workspace
+        script: |
+          cd ios
+          rm -rf Pods Podfile.lock Runner.xcworkspace
+          pod install
+          cd ..
       - name: Get Flutter packages
         script: |
           flutter pub get
