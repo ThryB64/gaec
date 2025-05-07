@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart';
 
@@ -12,24 +13,23 @@ import 'config/firebase_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Forcer l'orientation portrait
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
-  // Capturer les erreurs non gérées
-  PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('Erreur non gérée: $error');
-    debugPrint('Stack trace: $stack');
-    return true;
-  };
-
-  try {
-    // Initialiser Firebase avec la configuration
-    await Firebase.initializeApp(
-      options: FirebaseConfig.options,
-    );
-    debugPrint('Firebase initialisé avec succès');
-  } catch (e) {
-    debugPrint('Erreur lors de l\'initialisation de Firebase: $e');
-    // Continuer l'exécution même si Firebase échoue
-  }
+  // Initialiser Firebase
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: '${FIREBASE_API_KEY}',
+      appId: '${FIREBASE_APP_ID}',
+      messagingSenderId: '${FIREBASE_MESSAGING_SENDER_ID}',
+      projectId: '${FIREBASE_PROJECT_ID}',
+      storageBucket: '${FIREBASE_STORAGE_BUCKET}',
+    ),
+  );
 
   // Initialiser sqflite_common_ffi
   sqfliteFfiInit();
@@ -43,15 +43,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => DatabaseProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => DatabaseProvider()..initDatabase(),
+        ),
+      ],
       child: MaterialApp(
         title: 'Maïs Tracker',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+          primarySwatch: Colors.green,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
           useMaterial3: true,
         ),
-        home: const SplashScreen(),
+        home: const HomeScreen(),
       ),
     );
   }

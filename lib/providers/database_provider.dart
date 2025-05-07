@@ -12,7 +12,7 @@ import '../utils/poids_utils.dart';
 
 class DatabaseProvider with ChangeNotifier {
   Database? _database;
-  final SyncService _syncService;
+  SyncService? _syncService;
   final FirestoreServiceParcelle _parcelleService = FirestoreServiceParcelle();
   final FirestoreServiceCellule _celluleService = FirestoreServiceCellule();
   final FirestoreServiceChargement _chargementService = FirestoreServiceChargement();
@@ -25,9 +25,86 @@ class DatabaseProvider with ChangeNotifier {
   List<Variete> _varietes = [];
   bool _isInitialized = false;
 
+  Database? get database => _database;
+  SyncService? get syncService => _syncService;
+
   DatabaseProvider()
-      : _syncService = SyncService(_database!),
-        _initialize() {
+    : _syncService = SyncService(null); // Temporairement null
+
+  Future<void> initDatabase() async {
+    if (_database != null) return;
+
+    _database = await openDatabase(
+      join(await getDatabasesPath(), 'mais_tracker.db'),
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE parcelles(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT,
+            nom TEXT NOT NULL,
+            surface REAL NOT NULL,
+            date_creation TEXT NOT NULL,
+            notes TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE cellules(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT,
+            reference TEXT NOT NULL,
+            capacite REAL NOT NULL,
+            date_creation TEXT NOT NULL,
+            notes TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE chargements(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT,
+            cellule_id INTEGER NOT NULL,
+            parcelle_id INTEGER NOT NULL,
+            remorque TEXT NOT NULL,
+            date_chargement TEXT NOT NULL,
+            poids_plein REAL NOT NULL,
+            poids_vide REAL NOT NULL,
+            poids_net REAL NOT NULL,
+            poids_normes REAL NOT NULL,
+            humidite REAL NOT NULL,
+            variete TEXT NOT NULL,
+            FOREIGN KEY (cellule_id) REFERENCES cellules (id),
+            FOREIGN KEY (parcelle_id) REFERENCES parcelles (id)
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE semis(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT,
+            parcelle_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            varietes_surfaces TEXT NOT NULL,
+            notes TEXT,
+            FOREIGN KEY (parcelle_id) REFERENCES parcelles (id)
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE varietes(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT,
+            nom TEXT NOT NULL,
+            description TEXT,
+            date_creation TEXT NOT NULL
+          )
+        ''');
+      },
+    );
+
+    // Initialiser le service de synchronisation une fois la base de données créée
+    _syncService = SyncService(_database!);
   }
 
   List<Parcelle> get parcelles => _parcelles;
@@ -579,7 +656,7 @@ class DatabaseProvider with ChangeNotifier {
   }
 
   Future<void> syncAll() async {
-    await _syncService.syncAll();
+    await _syncService!.syncAll();
     notifyListeners();
   }
 
@@ -671,5 +748,12 @@ class DatabaseProvider with ChangeNotifier {
       await _varieteService.update(variete.documentId!, variete);
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _database?.close();
+    _syncService?.dispose();
+    super.dispose();
   }
 } 
