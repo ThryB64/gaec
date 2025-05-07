@@ -1,45 +1,103 @@
+# -------------------------
+# GLOBAL GITIGNORE FLUTTER
+# -------------------------
+
+# OS generated files
+.DS_Store
+*.swp
+*.swo
+*.tmp
+
 # Miscellaneous
 *.class
 *.log
 *.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
+*.moved-aside
+*.tags*
+*.mode1v3
+*.mode2v3
+*.pbxuser
+*.perspectivev3
 *.iml
 *.ipr
 *.iws
+*.lock
+*.bak
+*.old
+*.orig
+*.rej
+*.sublime-workspace
+*.sublime-project
+.sconsign.dblite
+.history
 .idea/
+.atom/
+.svn/
+xcuserdata/
+profile
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code
+.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Android Studio
+.gradle/
+local.properties
+.android/
+android/.gradle/
+android/.idea/
+
+# Flutter & Dart
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.flutter-versions
+.packages
 .pub-cache/
 .pub/
 /build/
+.migrate_working_dir/
+.melosearch/
+doc/api/
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# Android build
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS
+**/ios/Flutter/.last_build_id
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/ephemeral/
+# ios/Pods/   # <-- Pods peut être régénéré par Codemagic, donc on peut le laisser ignoré
+ios/.symlinks/
+ios/.generated/
+ios/DerivedData/
+ios/.vagrant/
+
+# DO NOT ignore shared Xcode schemes (required for CI like Codemagic)
+!ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+!ios/Runner.xcworkspace/
+
+# Firebase config (if sensitive, store via CI vars, otherwise commit to repo)
+# !ios/Runner/GoogleService-Info.plist  ← uncomment if needed in Git
+
+# Obfuscation and symbolication
+app.*.symbols
+app.*.map.json
+
+# Service definitions & generated plugins
+ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+
+# Exceptions for default Xcode config files
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
