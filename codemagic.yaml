@@ -11,67 +11,48 @@ workflows:
         bundle_identifier: com.gaec.maferme
       flutter: stable
       xcode: latest
-      cocoapods: default
       vars:
         FIREBASE_API_KEY: $FIREBASE_API_KEY
         FIREBASE_APP_ID: $FIREBASE_APP_ID
         FIREBASE_MESSAGING_SENDER_ID: $FIREBASE_MESSAGING_SENDER_ID
         FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID
         FIREBASE_STORAGE_BUCKET: $FIREBASE_STORAGE_BUCKET
-        APP_STORE_CONNECT_API_KEY: $APP_STORE_CONNECT_API_KEY
-        APP_STORE_CONNECT_API_KEY_ID: $APP_STORE_CONNECT_API_KEY_ID
-        APP_STORE_CONNECT_API_ISSUER_ID: $APP_STORE_CONNECT_API_ISSUER_ID
         BUNDLE_ID: "com.gaec.maferme"
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
     scripts:
-      - name: Set up code signing settings
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          keychain add-certificates
-          xcode-project use-profiles
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Install pods
+      - name: Install CocoaPods
         script: |
           cd ios
           pod install
-      - name: Update Firebase config
+          cd ..
+      - name: Update Firebase configuration
         script: |
           cd ios/Runner
-          sed -i '' "s/\${FIREBASE_API_KEY}/$FIREBASE_API_KEY/g" GoogleService-Info.plist
-          sed -i '' "s/\${FIREBASE_APP_ID}/$FIREBASE_APP_ID/g" GoogleService-Info.plist
-          sed -i '' "s/\${FIREBASE_MESSAGING_SENDER_ID}/$FIREBASE_MESSAGING_SENDER_ID/g" GoogleService-Info.plist
-          sed -i '' "s/\${FIREBASE_PROJECT_ID}/$FIREBASE_PROJECT_ID/g" GoogleService-Info.plist
-          sed -i '' "s/\${FIREBASE_STORAGE_BUCKET}/$FIREBASE_STORAGE_BUCKET/g" GoogleService-Info.plist
-      - name: Flutter build
+          plutil -replace API_KEY -string "$FIREBASE_API_KEY" GoogleService-Info.plist
+          plutil -replace GOOGLE_APP_ID -string "$FIREBASE_APP_ID" GoogleService-Info.plist
+          plutil -replace GCM_SENDER_ID -string "$FIREBASE_MESSAGING_SENDER_ID" GoogleService-Info.plist
+          plutil -replace PROJECT_ID -string "$FIREBASE_PROJECT_ID" GoogleService-Info.plist
+          plutil -replace STORAGE_BUCKET -string "$FIREBASE_STORAGE_BUCKET" GoogleService-Info.plist
+          cd ../..
+      - name: Build iOS app
         script: |
-          flutter build ios --release \
-            --dart-define=FIREBASE_API_KEY=$FIREBASE_API_KEY \
-            --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
-            --dart-define=FIREBASE_MESSAGING_SENDER_ID=$FIREBASE_MESSAGING_SENDER_ID \
-            --dart-define=FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID \
-            --dart-define=FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET
+          flutter build ios --release --no-codesign
       - name: Run tests
         script: |
           flutter test
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       email:
         recipients:
-          - ${NOTIFICATION_EMAIL}
+          - cytech.gaec@gmail.com
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        key_id: $APP_STORE_CONNECT_API_KEY_ID
-        issuer_id: $APP_STORE_CONNECT_API_ISSUER_ID
         submit_to_testflight: true
-        beta_groups:
-          - Testeurs internes
         submit_to_app_store: false 
