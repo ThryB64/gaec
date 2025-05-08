@@ -1,7 +1,6 @@
 workflows:
   ios-workflow:
     name: iOS Build
-    # Le workspace iOS (Runner.xcworkspace) est généré automatiquement par 'pod install' et ne doit PAS être versionné dans git.
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
@@ -34,16 +33,22 @@ workflows:
       - name: Ensure Flutter dir exists
         script: |
           mkdir -p ios/Flutter
-      - name: Generate xcconfig for iOS
+      - name: Generate xcconfig for iOS (simulator build)
         script: |
           flutter precache --ios
           flutter build ios --simulator
-      - name: List Flutter dir before export
+      - name: Check if xcconfig exists
         script: |
+          echo "📂 Contenu de ios/Flutter :"
           ls -l ios/Flutter
       - name: Export Release.xcconfig as artifact
         script: |
-          cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
+          if [ -f ios/Flutter/Release.xcconfig ]; then
+            cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
+            echo "✅ Fichier Release.xcconfig exporté avec succès."
+          else
+            echo "❌ Fichier Release.xcconfig introuvable."
+          fi
       - name: Install CocoaPods
         script: |
           cd ios
