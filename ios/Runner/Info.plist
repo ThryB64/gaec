@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Maïs Tracker</string>
+	<string>Mais Tracker</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,23 +45,5 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Cette application nécessite l'accès à la galerie pour importer des images.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Cette application nécessite l'accès à la caméra pour prendre des photos.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Cette application nécessite l'accès au microphone pour enregistrer des notes vocales.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Cette application nécessite l'accès à la localisation pour géolocaliser les parcelles.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Cette application nécessite l'accès à la localisation en arrière-plan pour le suivi des parcelles.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
-		<string>location</string>
-	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>
