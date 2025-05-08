@@ -75,16 +75,12 @@ ios/Flutter/flutter_export_environment.sh
 ios/Flutter/app.flx
 ios/Flutter/app.zip
 ios/Flutter/ephemeral/
-# ios/Pods/   # <-- Pods peut être régénéré par Codemagic, donc on peut le laisser ignoré
-ios/.symlinks/
-ios/.generated/
-ios/DerivedData/
-ios/.vagrant/
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Podfile.lock
 
 # DO NOT ignore shared Xcode schemes (required for CI like Codemagic)
 !ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
-ios/Runner.xcworkspace/
-ios/Podfile.lock
 
 # Firebase config (if sensitive, store via CI vars, otherwise commit to repo)
 # !ios/Runner/GoogleService-Info.plist  ← uncomment if needed in Git
@@ -103,6 +99,12 @@ ios/Runner/GeneratedPluginRegistrant.*
 !default.pbxuser
 !default.perspectivev3
 
-ios/Pods/
-ios/Runner.xcworkspace/
-ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Flutter.podspec
+ios/Flutter/*.xcconfig
+ios/.flutter-plugins*
+ios/.symlinks/
+!ios/Podfile
+!ios/Runner.xcodeproj/
+!ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
