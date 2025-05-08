@@ -31,10 +31,16 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
+      - name: Ensure Flutter dir exists
+        script: |
+          mkdir -p ios/Flutter
       - name: Generate xcconfig for iOS
         script: |
           flutter precache --ios
           flutter build ios --simulator
+      - name: List Flutter dir before export
+        script: |
+          ls -l ios/Flutter
       - name: Export Release.xcconfig as artifact
         script: |
           cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
