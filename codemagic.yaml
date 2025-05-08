@@ -30,6 +30,10 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
+      - name: Ensure Flutter.framework exists (release)
+        script: |
+          flutter precache --ios
+          flutter build ios --release --simulator
       - name: Install CocoaPods
         script: |
           cd ios
