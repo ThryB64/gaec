@@ -55,11 +55,15 @@ workflows:
       - name: Run tests
         script: |
           flutter test
+      - name: Export Release.xcconfig as artifact
+        script: |
+          cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+      - $CM_BUILD_DIR/Release.xcconfig
     publishing:
       email:
         recipients:
