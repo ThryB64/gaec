@@ -59,6 +59,9 @@ ios/Podfile.lock
 ios/.symlinks/
 ios/.flutter-plugins*
 
+# ✅ On garde Release.xcconfig versionné
+!ios/Flutter/Release.xcconfig
+
 # macOS
 macos/Flutter/ephemeral/
 macos/Flutter/flutter_export_environment.sh
@@ -105,8 +108,3 @@ xcuserdata/
 *.bak
 *.old
 *.lock
-
-# Updated lines
-ios/Flutter/flutter_export_environment.sh
-ios/Flutter/Flutter.podspec
-ios/Flutter/*.xcconfig
