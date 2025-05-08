@@ -1,91 +1,86 @@
 # -------------------------
-# GLOBAL GITIGNORE FLUTTER
+# FLUTTER GLOBAL GITIGNORE
 # -------------------------
 
-# OS generated files
+# OS-generated files
 .DS_Store
 *.swp
 *.swo
 *.tmp
 
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.moved-aside
-*.tags*
-*.mode1v3
-*.mode2v3
-*.pbxuser
-*.perspectivev3
+# Editor & IDE
+.idea/
+.vscode/
 *.iml
 *.ipr
 *.iws
-*.lock
-*.bak
-*.old
-*.orig
-*.rej
-*.sublime-workspace
-*.sublime-project
-.sconsign.dblite
-.history
-.idea/
-.atom/
-.svn/
-xcuserdata/
-profile
 
-# VS Code
-.vscode/
-
-# Android Studio
-.gradle/
-local.properties
-.android/
-android/.gradle/
-android/.idea/
-
-# Flutter & Dart
+# Build / Output folders
+/build/
+**/build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
-.flutter-versions
 .packages
-.pub-cache/
 .pub/
-/build/
+.pub-cache/
+
+# Flutter config
 .migrate_working_dir/
+.flutter-versions
+.flutter-plugins
 .melosearch/
 doc/api/
+.metadata
 
-# Android build
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Android
+.gradle/
+local.properties
+android/.gradle/
+android/.idea/
+android/app/debug/
+android/app/profile/
+android/app/release/
 
 # iOS
-**/ios/Flutter/.last_build_id
+ios/Flutter/.last_build_id
 ios/Flutter/Generated.xcconfig
 ios/Flutter/App.framework
 ios/Flutter/Flutter.framework
+ios/Flutter/flutter_export_environment.sh
 ios/Flutter/Flutter.podspec
 ios/Flutter/flutter_assets/
-ios/Flutter/flutter_export_environment.sh
 ios/Flutter/app.flx
 ios/Flutter/app.zip
 ios/Flutter/ephemeral/
 ios/Pods/
 ios/Runner.xcworkspace/
 ios/Podfile.lock
+ios/.symlinks/
+ios/.flutter-plugins*
 
-# DO NOT ignore shared Xcode schemes (required for CI like Codemagic)
-!ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+# macOS
+macos/Flutter/ephemeral/
+macos/Flutter/flutter_export_environment.sh
+macos/Flutter/Flutter-Generated.xcconfig
 
-# Firebase config (if sensitive, store via CI vars, otherwise commit to repo)
-# !ios/Runner/GoogleService-Info.plist  ← uncomment if needed in Git
+# Windows / Linux
+*.exe
+*.dll
+*.obj
+*.o
+*.so
+*.dylib
 
-# Obfuscation and symbolication
+# Tests
+coverage/
+*.lcov
+
+# Firebase (uncomment if you want to include the file)
+# ios/Runner/GoogleService-Info.plist
+# android/app/google-services.json
+
+# Symbolication & obfuscation
 app.*.symbols
 app.*.map.json
 
@@ -93,18 +88,20 @@ app.*.map.json
 ServiceDefinitions.json
 ios/Runner/GeneratedPluginRegistrant.*
 
-# Exceptions for default Xcode config files
-!default.mode1v3
-!default.mode2v3
-!default.pbxuser
-!default.perspectivev3
-
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/Flutter/Flutter.podspec
-ios/Flutter/*.xcconfig
-ios/.flutter-plugins*
-ios/.symlinks/
-!ios/Podfile
+# DO NOT ignore shared Xcode schemes (needed for CI like Codemagic)
 !ios/Runner.xcodeproj/
 !ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+
+# Xcode misc
+xcuserdata/
+*.mode1v3
+*.mode2v3
+*.pbxuser
+*.perspectivev3
+*.moved-aside
+*.tags*
+*.orig
+*.rej
+*.bak
+*.old
+*.lock

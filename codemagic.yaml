@@ -1,7 +1,6 @@
 workflows:
   ios-workflow:
     name: iOS Build
-    # Le workspace iOS (Runner.xcworkspace) est généré automatiquement par 'pod install' et ne doit PAS être versionné dans git.
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
@@ -22,20 +21,22 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
     scripts:
-      - name: Clean and regenerate iOS workspace
-        script: |
-          cd ios
-          rm -rf Pods Podfile.lock Runner.xcworkspace
-          pod install
-          cd ..
       - name: Get Flutter packages
         script: |
           flutter pub get
+
+      - name: Clean iOS build artifacts
+        script: |
+          cd ios
+          rm -rf Pods Podfile.lock Runner.xcworkspace
+          cd ..
+
       - name: Install CocoaPods
         script: |
           cd ios
           pod install
           cd ..
+
       - name: Update Firebase configuration
         script: |
           cd ios/Runner
@@ -45,21 +46,25 @@ workflows:
           plutil -replace PROJECT_ID -string "$FIREBASE_PROJECT_ID" GoogleService-Info.plist
           plutil -replace STORAGE_BUCKET -string "$FIREBASE_STORAGE_BUCKET" GoogleService-Info.plist
           cd ../..
+
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign
+
       - name: Run tests
         script: |
           flutter test
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
     publishing:
       email:
         recipients:
           - cytech.gaec@gmail.com
       app_store_connect:
         submit_to_testflight: true
-        submit_to_app_store: false 
+        submit_to_app_store: false
