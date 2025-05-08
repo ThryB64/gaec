@@ -30,25 +30,6 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Ensure Flutter dir exists
-        script: |
-          mkdir -p ios/Flutter
-      - name: Generate xcconfig for iOS (simulator build)
-        script: |
-          flutter precache --ios
-          flutter build ios --simulator
-      - name: Check if xcconfig exists
-        script: |
-          echo "📂 Contenu de ios/Flutter :"
-          ls -l ios/Flutter
-      - name: Export Release.xcconfig as artifact
-        script: |
-          if [ -f ios/Flutter/Release.xcconfig ]; then
-            cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
-            echo "✅ Fichier Release.xcconfig exporté avec succès."
-          else
-            echo "❌ Fichier Release.xcconfig introuvable."
-          fi
       - name: Install CocoaPods
         script: |
           cd ios
@@ -74,7 +55,6 @@ workflows:
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
-      - $CM_BUILD_DIR/Release.xcconfig
     publishing:
       email:
         recipients:
