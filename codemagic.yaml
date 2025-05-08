@@ -31,10 +31,13 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Ensure Flutter.framework exists
+      - name: Generate xcconfig for iOS
         script: |
           flutter precache --ios
           flutter build ios --simulator
+      - name: Export Release.xcconfig as artifact
+        script: |
+          cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
       - name: Install CocoaPods
         script: |
           cd ios
@@ -55,9 +58,6 @@ workflows:
       - name: Run tests
         script: |
           flutter test
-      - name: Export Release.xcconfig as artifact
-        script: |
-          cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
