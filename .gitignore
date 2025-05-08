@@ -83,7 +83,8 @@ ios/.vagrant/
 
 # DO NOT ignore shared Xcode schemes (required for CI like Codemagic)
 !ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
-!ios/Runner.xcworkspace/
+ios/Runner.xcworkspace/
+ios/Podfile.lock
 
 # Firebase config (if sensitive, store via CI vars, otherwise commit to repo)
 # !ios/Runner/GoogleService-Info.plist  ← uncomment if needed in Git
@@ -101,3 +102,7 @@ ios/Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Flutter/ephemeral/

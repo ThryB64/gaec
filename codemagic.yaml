@@ -1,6 +1,7 @@
 workflows:
   ios-workflow:
     name: iOS Build
+    # Le workspace iOS (Runner.xcworkspace) est généré automatiquement par 'pod install' et ne doit PAS être versionné dans git.
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
