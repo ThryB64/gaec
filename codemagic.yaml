@@ -34,7 +34,7 @@ workflows:
       - name: Ensure Flutter.framework exists
         script: |
           flutter precache --ios
-          flutter build ios --no-codesign --simulator
+          flutter build ios --simulator
       - name: Install CocoaPods
         script: |
           cd ios
@@ -51,7 +51,7 @@ workflows:
           cd ../..
       - name: Build iOS app
         script: |
-          flutter build ios --release --no-codesign
+          flutter build ios --release
       - name: Run tests
         script: |
           flutter test
