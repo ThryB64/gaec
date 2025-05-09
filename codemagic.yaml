@@ -27,10 +27,6 @@ workflows:
           flutter pub get
           flutter precache --ios
 
-      - name: Simulator build to force framework generation
-        script: |
-          flutter build ios --simulator
-
       - name: Install CocoaPods
         script: |
           cd ios
