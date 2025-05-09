@@ -21,25 +21,30 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
     scripts:
-      - name: Clean and regenerate iOS workspace
+      - name: Flutter clean
         script: |
-          cd ios
-          rm -rf Pods Podfile.lock Runner.xcworkspace
-          pod install
-          cd ..
+          flutter clean
+
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Ensure Flutter.framework exists (release)
+
+      - name: Precache Flutter dependencies for iOS
         script: |
           flutter precache --ios
-          flutter build ios --release --simulator
-      - name: Install CocoaPods
+
+      - name: Ensure Flutter.framework (simulator build)
+        script: |
+          flutter build ios --simulator
+
+      - name: CocoaPods install
         script: |
           cd ios
-          pod install
+          rm -rf Pods Podfile.lock Runner.xcworkspace
+          pod install --repo-update
           cd ..
-      - name: Update Firebase configuration
+
+      - name: Update Firebase plist values
         script: |
           cd ios/Runner
           plutil -replace API_KEY -string "$FIREBASE_API_KEY" GoogleService-Info.plist
@@ -48,10 +53,12 @@ workflows:
           plutil -replace PROJECT_ID -string "$FIREBASE_PROJECT_ID" GoogleService-Info.plist
           plutil -replace STORAGE_BUCKET -string "$FIREBASE_STORAGE_BUCKET" GoogleService-Info.plist
           cd ../..
+
       - name: Build iOS app
         script: |
-          flutter build ios --release
-      - name: Run tests
+          flutter build ios --release --no-codesign
+
+      - name: Run Flutter tests
         script: |
           flutter test
     artifacts:
