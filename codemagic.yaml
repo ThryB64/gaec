@@ -70,6 +70,3 @@ workflows:
       email:
         recipients:
           - cytech.gaec@gmail.com
-      app_store_connect:
-        submit_to_testflight: true
-        submit_to_app_store: false
