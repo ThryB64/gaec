@@ -27,6 +27,10 @@ workflows:
           flutter pub get
           flutter precache --ios
 
+      - name: Generate iOS frameworks (fixes Flutter.h not found)
+        script: |
+          flutter build ios-framework --no-universal --output=build/ios-framework
+
       - name: Install CocoaPods
         script: |
           cd ios
