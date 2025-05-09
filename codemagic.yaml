@@ -24,6 +24,14 @@ workflows:
           flutter pub get
           flutter precache --ios
 
+      - name: Build iOS frameworks (fixes Flutter.h not found)
+        script: |
+          flutter build ios --no-codesign --simulator
+
+    - name: Export Release.xcconfig as artifact
+      script: |
+        cp ios/Flutter/Release.xcconfig $CM_BUILD_DIR/
+
       - name: Build iOS app (no code signing)
         script: |
           flutter build ios --release --no-codesign
