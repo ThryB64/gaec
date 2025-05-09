@@ -6,11 +6,11 @@ workflows:
     integrations:
       app_store_connect: codemagic
     environment:
+      flutter: stable
+      xcode: latest
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.gaec.maferme
-      flutter: stable
-      xcode: latest
       vars:
         FIREBASE_API_KEY: $FIREBASE_API_KEY
         FIREBASE_APP_ID: $FIREBASE_APP_ID
@@ -21,30 +21,28 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
     scripts:
-      - name: Flutter clean
+      - name: Clean build environment
         script: |
           flutter clean
+          rm -rf ios/Pods ios/Podfile.lock ios/Runner.xcworkspace
+          rm -rf ~/Library/Developer/Xcode/DerivedData
 
-      - name: Get Flutter packages
+      - name: Precache Flutter and fetch packages
         script: |
           flutter pub get
-
-      - name: Precache Flutter dependencies for iOS
-        script: |
           flutter precache --ios
 
-      - name: Ensure Flutter.framework (simulator build)
+      - name: Simulator build to force framework generation
         script: |
           flutter build ios --simulator
 
-      - name: CocoaPods install
+      - name: Install CocoaPods
         script: |
           cd ios
-          rm -rf Pods Podfile.lock Runner.xcworkspace
           pod install --repo-update
           cd ..
 
-      - name: Update Firebase plist values
+      - name: Replace Firebase values in plist
         script: |
           cd ios/Runner
           plutil -replace API_KEY -string "$FIREBASE_API_KEY" GoogleService-Info.plist
@@ -54,18 +52,20 @@ workflows:
           plutil -replace STORAGE_BUCKET -string "$FIREBASE_STORAGE_BUCKET" GoogleService-Info.plist
           cd ../..
 
-      - name: Build iOS app
+      - name: Build iOS release
         script: |
           flutter build ios --release --no-codesign
 
       - name: Run Flutter tests
         script: |
           flutter test
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
     publishing:
       email:
         recipients:
