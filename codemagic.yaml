@@ -1,8 +1,9 @@
 workflows:
   ios-workflow:
-    name: iOS Build
+    name: iOS Build (no codesign)
     max_build_duration: 120
     instance_type: mac_mini_m2
+
     environment:
       flutter: stable
       xcode: latest
@@ -10,6 +11,7 @@ workflows:
         BUNDLE_ID: "com.gaec.maferme"
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
+
     scripts:
       - name: Clean build environment
         script: |
