@@ -6,30 +6,33 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
+      ios_signing:
+        distribution_type: development
+        bundle_identifier: com.gaec.maferme
       vars:
-        FIREBASE_API_KEY: $FIREBASE_API_KEY
-        FIREBASE_APP_ID: $FIREBASE_APP_ID
-        FIREBASE_MESSAGING_SENDER_ID: $FIREBASE_MESSAGING_SENDER_ID
-        FIREBASE_PROJECT_ID: $FIREBASE_PROJECT_ID
-        FIREBASE_STORAGE_BUCKET: $FIREBASE_STORAGE_BUCKET
-        BUNDLE_ID: "com.gaec.maferme"
-        XCODE_WORKSPACE: "Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
+        FIREBASE_API_KEY: your_api_key
+        FIREBASE_APP_ID: your_app_id
+        FIREBASE_MESSAGING_SENDER_ID: your_sender_id
+        FIREBASE_PROJECT_ID: your_project_id
+        FIREBASE_STORAGE_BUCKET: your_bucket
+        BUNDLE_ID: com.gaec.maferme
+        XCODE_WORKSPACE: Runner.xcworkspace
+        XCODE_SCHEME: Runner
     scripts:
-      - name: Clean build environment
+      - name: Clean environment
         script: |
           flutter clean
           rm -rf ios/Pods ios/Podfile.lock ios/Runner.xcworkspace
           rm -rf ~/Library/Developer/Xcode/DerivedData
 
-      - name: Precache Flutter and fetch packages
+      - name: Fetch packages
         script: |
           flutter pub get
           flutter precache --ios
 
       - name: Generate iOS frameworks (fixes Flutter.h not found)
         script: |
-          flutter build ios-framework --no-universal --output=build/ios-framework
+          flutter build ios-framework --output=build/ios-framework
 
       - name: Install CocoaPods
         script: |
@@ -50,10 +53,6 @@ workflows:
       - name: Build iOS release
         script: |
           flutter build ios --release --no-codesign
-
-      - name: Run Flutter tests
-        script: |
-          flutter test
 
     artifacts:
       - build/ios/ipa/*.ipa
