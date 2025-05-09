@@ -6,51 +6,23 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: com.gaec.maferme
       vars:
-        FIREBASE_API_KEY: your_api_key
-        FIREBASE_APP_ID: your_app_id
-        FIREBASE_MESSAGING_SENDER_ID: your_sender_id
-        FIREBASE_PROJECT_ID: your_project_id
-        FIREBASE_STORAGE_BUCKET: your_bucket
-        BUNDLE_ID: com.gaec.maferme
-        XCODE_WORKSPACE: Runner.xcworkspace
-        XCODE_SCHEME: Runner
+        BUNDLE_ID: "com.gaec.maferme"
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
     scripts:
-      - name: Clean environment
+      - name: Clean build environment
         script: |
           flutter clean
           rm -rf ios/Pods ios/Podfile.lock ios/Runner.xcworkspace
           rm -rf ~/Library/Developer/Xcode/DerivedData
 
-      - name: Fetch packages
+      - name: Precache Flutter and get packages
         script: |
           flutter pub get
           flutter precache --ios
 
-      - name: Generate iOS frameworks (fixes Flutter.h not found)
-        script: |
-          flutter build ios-framework --output=build/ios-framework
-
-      - name: Install CocoaPods
-        script: |
-          cd ios
-          pod install --repo-update
-          cd ..
-
-      - name: Replace Firebase values in plist
-        script: |
-          cd ios/Runner
-          plutil -replace API_KEY -string "$FIREBASE_API_KEY" GoogleService-Info.plist
-          plutil -replace GOOGLE_APP_ID -string "$FIREBASE_APP_ID" GoogleService-Info.plist
-          plutil -replace GCM_SENDER_ID -string "$FIREBASE_MESSAGING_SENDER_ID" GoogleService-Info.plist
-          plutil -replace PROJECT_ID -string "$FIREBASE_PROJECT_ID" GoogleService-Info.plist
-          plutil -replace STORAGE_BUCKET -string "$FIREBASE_STORAGE_BUCKET" GoogleService-Info.plist
-          cd ../..
-
-      - name: Build iOS release
+      - name: Build iOS app (no code signing)
         script: |
           flutter build ios --release --no-codesign
 
